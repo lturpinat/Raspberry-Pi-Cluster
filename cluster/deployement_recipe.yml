@@ -1,0 +1,155 @@
+---
+- name: "Apply common pre configuration to all nodes"
+  hosts: nodes
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: "Update hosts file"
+    template:
+      src: resources/etc/hosts
+      dest: /etc/hosts
+    tags: hosts
+
+  - name: "Update apt-get proxy file"
+    template:
+      src: resources/etc/apt/apt.conf.d/proxy.conf
+      dest: /etc/apt/apt.conf.d/proxy.conf
+    tags: apt  
+
+  - name: "Export proxy variables in /etc/profile file"
+    lineinfile:
+      dest: /etc/profile
+      line: "{{ item.line }}"
+    with_items:
+      - { line: 'export http_proxy=193.49.118.36' }
+      - { line: 'export https_proxy=193.49.118.36' }      
+    tags: proxy
+
+  - name: "Update apt cache and install required packages"
+    apt:
+      name: "{{ item }}"
+      update_cache: yes
+      state: installed
+    with_items:
+      - ntp
+      - munge
+      - slurmd
+      - slurm-wlm-basic-plugins
+      - ganglia-monitor
+      - nfs-common
+    tags: apt    
+
+  - name: "Update ntp configuration file"
+    template:
+      src: resources/etc/ntp.conf
+      dest: /etc/ntp.conf
+    tags: ntp
+
+  - name: "Enable ntp service"
+    systemd:
+      name: ntp.service
+      enabled: yes
+      masked: no
+
+  - name: "Mount the nfs shared folder at boot (/srv/shared)"
+    lineinfile:
+      dest: /etc/fstab
+      line: "pigateway:/srv/shared	/srv/shared nfs rw,hard,intr      0       0"
+
+  - name: "Update Ganglia configuration file"
+    template:
+      src: resources/etc/ganglia/gmond.conf
+      dest: /etc/ganglia/gmond.conf
+    tags: ganglia
+
+  - name: "Enable Ganglia service"
+    systemd:
+      name: ganglia-monitor.service
+      enabled: yes
+      masked: no
+
+  - name: "Update Munge configuration file"
+    template:
+      src: resources/etc/munge/munge.key
+      dest: /etc/munge/munge.key 
+    tags: munge
+
+  - name: "Enable Munge service"
+    systemd:
+      name: munge.service
+      enabled: yes
+      masked: no  
+      
+  - name: "Create SLURM specific folders (1)"
+    file:
+      path: /var/spool/slurm/slurmd
+      state: directory
+      owner: slurm
+      group: root
+      mode: 0755
+      recurse: yes
+    tags: slurm
+
+- name: "Apply SLURM nodes and scheduler common files"
+  hosts: all
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: "Blacklisting wifi and bluetooth"
+    template:
+      src: resources/etc/slurm-llnl/slurm.conf
+      dest: /etc/slurm-llnl/slurm.conf
+    tags: connections
+    
+  - name: "Inserting SLURM default configuration file"
+    template:
+      src: resources/etc/slurm-llnl/slurm.conf
+      dest: /etc/slurm-llnl/slurm.conf     
+    tags: slurm
+  
+  - name: "Ensure SLURM custom script directory exists"
+    file:
+      path: /opt/slurm
+      recurse: yes
+      state: directory
+    tags: slurm  
+
+  - name: "Update SLURM main script"
+    copy:
+      src: resources/scripts/hack.sh
+      dest: /opt/slurm/hack.sh
+      mode: u=rx,g=rx,o=rx
+    tags: slurm
+
+  - name: "Update SLURM prolog script"
+    copy:
+      src: resources/scripts/prolog.sh
+      dest: /opt/slurm/prolog.sh
+      mode: u=rx,g=rx,o=rx
+    tags: slurm
+
+  - name: "Update SLURM epilog script"
+    copy:
+      src: resources/scripts/epilog.sh
+      dest: /opt/slurm/epilog.sh
+      mode: u=rx,g=rx,o=rx
+    tags: slurm  
+
+  - name: "Deploy last version of the password hacker"
+    copy:
+      src: resources/root/crack
+      dest: /opt/slurm/crack
+      mode: u=rx,g=rx,o=rx
+    tags: software   
+    
+- name: "Apply scheduler proper files"
+  hosts: scheduler
+  gather_facts: yes
+  remote_user: root
+  tasks:
+  - name: "Update launch_to_nodes script"
+    copy:
+      src: resources/scripts/launch_to_nodes.sh
+      dest: /opt/slurm/launch_to_nodes.sh
+      mode: u=rx,g=rx,o=rx
+    tags: slurm

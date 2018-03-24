@@ -1,0 +1,18 @@
+127.0.0.1	localhost
+::1		localhost ip6-localhost ip6-loopback
+ff02::1		ip6-allnodes
+ff02::2		ip6-allrouters
+
+127.0.1.1	raspberrypi
+
+10.0.0.1 pigateway
+10.0.0.9 pischeduler
+
+10.0.0.10 pinode1
+10.0.0.11 pinode2
+10.0.0.12 pinode3
+10.0.0.13 pinode4
+10.0.0.14 pinode5
+10.0.0.15 pinode6
+10.0.0.16 pinode7
+10.0.0.17 pinode8
