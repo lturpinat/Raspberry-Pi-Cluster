@@ -23,6 +23,10 @@ This project aims to reproduce large-scale clusters' structure to a small teachi
 
 ![Cluster's structure](https://i.imgur.com/R0mO7PR.png)
 
+## Scripts' roadmap
+
+![Scripts' roadmap](https://i.imgur.com/iHp1kuV.png)
+
 ## Contributors
 
 * Louis Turpinat : "Unix side" with Ansible, SLURM, Ganglia and all the networking part
