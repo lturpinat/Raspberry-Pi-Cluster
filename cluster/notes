@@ -1,6 +1,0 @@
-Pour mettre à jour et déployer crack : 
-
-1°) Copie la nouvelle version dans /root/ansible/resources/root/ en l'appelant "crack"
-
-2°) Lance le déployement :
-	ansible-playbook deployement_recipe.yml --tag "software"
